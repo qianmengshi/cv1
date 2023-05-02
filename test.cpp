@@ -16,12 +16,134 @@ using namespace cv;
 unsigned char source[120][188];
 unsigned char image_buffer[120][188];
 
+typedef struct XZZZZZ {
+    int x;
+    int y;
+} pppoint;
+
 const Point neighbors[8] = { { 0, 1 }, { 1, 1 }, { 1, 0 }, { 1, -1 }, 
                              { 0, -1 }, { -1, -1 }, { -1, 0 }, {-1, 1} };
 
 const Point directions[8] = { { 0, 1 }, {1,1}, { 1, 0 }, { 1, -1 }, 
 							  { 0, -1 },  { -1, -1 }, { -1, 0 },{ -1, 1 } };
+pppoint edge_t[2000];
+pppoint edges_t[10][20];
+
+int find_rect(unsigned char image[120][188])
+ {
+	unsigned char point_num = 0;
+
+	int gorw_direction[8];
+	memset(gorw_direction,0,sizeof(gorw_direction));
+
+	int i, j, counts = 0, curr_d = 0;
+	int line_num = 0;
+	for (i = 1; i < 119; i++)
+		for (j = 1; j < 187; j++)
+		{
+			// 起始点及当前点
+			//Point s_pt = Point(i, j);
+			pppoint  b_pt;
+			b_pt.x = i;
+			b_pt.y = j;
+			pppoint  c_pt;
+			c_pt.x = i;
+			c_pt.y = j;
+			
+
+			// 如果当前点为前景点
+			if (255 == image[c_pt.x][c_pt.y = j])
+			{
+				memset(edge_t,0,sizeof(edge_t));
+				bool tra_flag = false;
+				// 存入
+				edge_t[0].x = c_pt.x;
+				edge_t[0].y = c_pt.y;
+				image[i][j]= 0;    // 用过的点直接给设置为0
  
+				// 进行跟踪
+				while (!tra_flag)
+				{			
+					// 循环八次
+					for (counts = 0; counts < 8; counts++)
+					{
+						// 防止索引出界
+						if (curr_d >= 8)
+						{
+							curr_d -= 8;
+						}
+						if (curr_d < 0)
+						{
+							curr_d += 8;
+						}
+ 
+						// 当前点坐标
+						// 跟踪的过程，应该是个连续的过程，需要不停的更新搜索的root点
+						c_pt.x = b_pt.x + directions[curr_d].x;
+						c_pt.y = b_pt.y + directions[curr_d].y;
+
+						// 边界判断
+						if ((c_pt.x > 0) && (c_pt.x < 119) &&
+							(c_pt.y > 0) && (c_pt.y < 187))
+						{
+							// 如果存在边缘
+							if (255 == image[c_pt.x][c_pt.y])
+							{
+								int x = c_pt.x,y = c_pt.y;
+								printf("(%d),",curr_d);
+								gorw_direction[curr_d]++;
+								curr_d -= 2;   // 更新当前方向
+								point_num++;
+								edge_t[point_num].x = c_pt.x;
+								edge_t[point_num].y = c_pt.y;
+								image[c_pt.x][ c_pt.y] = 0;
+								// 更新b_pt:跟踪的root点
+								b_pt.x = c_pt.x;
+								b_pt.y = c_pt.y;
+								// cout << c_pt.x << " " << c_pt.y << endl;
+								break;   // 跳出for循环
+							}
+						}
+						curr_d++;
+					}   // end for
+					// 跟踪的终止条件：如果8邻域都不存在边缘
+					if (8 == counts )
+					{
+						// 清零
+						int j_flag = 0;
+						curr_d = 0;
+						tra_flag = true;
+
+						for(int j = 0;j < 8;j++)
+						{
+							if(gorw_direction[j]>10)
+							{
+								j_flag++;
+							}
+						}
+						if(j_flag>3&&(gorw_direction[0]>10||gorw_direction[4]>10))
+						{
+							for(int i = 0;i <= point_num ;i++)
+							{
+								edges_t[line_num][i] = edge_t[i];
+							}
+							line_num++;
+						}
+						memset(gorw_direction,0,sizeof(gorw_direction));
+
+
+						printf("\n");
+						break;
+					}
+ 
+				}  // end if
+			}  // end while
+			
+		}
+	return line_num;
+ }
+
+
 void LeadToEdge(void)
 {
     int w = 188;
@@ -225,125 +347,55 @@ int main(int argc ,char *argv[])
 	imshow("sobel", gray_img);
 
 	#if 1       //八领域
+	int line_num;
+	line_num = find_rect(image_buffer);
+	if(line_num>10)
+	{
+		line_num = 10;
+	}
 
-	vector<Point> edge_t;
-	vector<vector<Point>> edges;
-	
-	int gorw_direction[8];
-	memset(gorw_direction,0,sizeof(gorw_direction));
 
-	// 边缘跟踪
-	int i, j, counts = 0, curr_d = 0;
-	for (i = 1; i < gray_img.rows - 1; i++)
-		for (j = 1; j < gray_img.cols - 1; j++)
-		{
-			// 起始点及当前点
-			//Point s_pt = Point(i, j);
-			Point b_pt = Point(i, j);
-			Point c_pt = Point(i, j);
-			
-
-			// 如果当前点为前景点
-			if (255 == gray_img.at<uchar>(c_pt.x, c_pt.y))
-			{
-				edge_t.clear();
-				bool tra_flag = false;
-				// 存入
-				edge_t.push_back(c_pt);
-				gray_img.at<uchar>(c_pt.x, c_pt.y) = 0;    // 用过的点直接给设置为0
- 
-				// 进行跟踪
-				while (!tra_flag)
-				{			
-					// 循环八次
-					for (counts = 0; counts < 8; counts++)
-					{
-						// 防止索引出界
-						if (curr_d >= 8)
-						{
-							curr_d -= 8;
-						}
-						if (curr_d < 0)
-						{
-							curr_d += 8;
-						}
- 
-						// 当前点坐标
-						// 跟踪的过程，应该是个连续的过程，需要不停的更新搜索的root点
-						c_pt = Point(b_pt.x + directions[curr_d].x, b_pt.y + directions[curr_d].y);
- 
-						// 边界判断
-						if ((c_pt.x > 0) && (c_pt.x < gray_img.rows - 1) &&
-							(c_pt.y > 0) && (c_pt.y < gray_img.cols - 1))
-						{
-							// 如果存在边缘
-							if (255 == gray_img.at<uchar>(c_pt.x, c_pt.y))
-							{
-								int x = c_pt.x,y = c_pt.y;
-								printf("(%d),",curr_d);
-								gorw_direction[curr_d]++;
-								curr_d -= 2;   // 更新当前方向
-								edge_t.push_back(c_pt);
-								gray_img.at<uchar>(c_pt.x, c_pt.y) = 0;
- 
-								// 更新b_pt:跟踪的root点
-								b_pt.x = c_pt.x;
-								b_pt.y = c_pt.y;
-								// cout << c_pt.x << " " << c_pt.y << endl;
- 
-								break;   // 跳出for循环
-							}
-						}
-						curr_d++;
-					}   // end for
-					// 跟踪的终止条件：如果8邻域都不存在边缘
-					if (8 == counts )
-					{
-						// 清零
-						int j_flag = 0;
-						curr_d = 0;
-						tra_flag = true;
-						for(int j = 0;j < 8;j++)
-						{
-							if(gorw_direction[j]>10)
-							{
-								j_flag++;
-							}
-						}
-						if(j_flag>3&&(gorw_direction[0]>10||gorw_direction[4]>10))
-							edges.push_back(edge_t);
-						memset(gorw_direction,0,sizeof(gorw_direction));
-						printf("\n");
-						break;
-					}
- 
-				}  // end if
-			}  // end while
-			
-		}
-
-		
- 
 	// 显示一下
 	Mat trace_edge = Mat::zeros(gray_img.rows, gray_img.cols, CV_8UC1);
 	Mat trace_edge_color;
 	cvtColor(trace_edge, trace_edge_color, CV_GRAY2BGR);
-	for (i = 0; i < edges.size(); i++)
+	int i,j;
+	for (i = 0; i < line_num; i++)
 	{
-		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
- 
-		//cout << edges[i].size() << endl;
-		// 过滤掉较小的边缘
-		if (edges[i].size() > 50)
-		{
-			for (j = 0; j < edges[i].size(); j++)
+			int point_num;
+			for(j = 0;j<2000;j++)
 			{
-				trace_edge_color.at<Vec3b>(edges[i][j].x, edges[i][j].y)[0] = 0;
-				trace_edge_color.at<Vec3b>(edges[i][j].x, edges[i][j].y)[1] = 0;
-				trace_edge_color.at<Vec3b>(edges[i][j].x, edges[i][j].y)[2] = 255;
+				if((!edges_t[i][j].x)&&(!edges_t[i][j].y))
+				{
+					point_num = j;
+					break;
+				}
+			}
+			if(point_num!=2000)
+			for (j = 0; j < point_num; j++)
+			{
+				trace_edge_color.at<Vec3b>(edges_t[i][j].x, edges_t[i][j].y)[0] = 0;
+				trace_edge_color.at<Vec3b>(edges_t[i][j].x, edges_t[i][j].y)[1] = 0;
+				trace_edge_color.at<Vec3b>(edges_t[i][j].x, edges_t[i][j].y)[2] = 255;
 				// printf("(%d %d),",edges[i][j].x, edges[i][j].y);
 			}
-		}
+		// }
+	// for (i = 0; i < edges.size(); i++)
+	// {
+	// 	Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+ 
+	// 	//cout << edges[i].size() << endl;
+	// 	// 过滤掉较小的边缘
+	// 	if (edges[i].size() > 50)
+	// 	{
+	// 		for (j = 0; j < edges[i].size(); j++)
+	// 		{
+	// 			trace_edge_color.at<Vec3b>(edges[i][j].x, edges[i][j].y)[0] = 0;
+	// 			trace_edge_color.at<Vec3b>(edges[i][j].x, edges[i][j].y)[1] = 0;
+	// 			trace_edge_color.at<Vec3b>(edges[i][j].x, edges[i][j].y)[2] = 255;
+	// 			// printf("(%d %d),",edges[i][j].x, edges[i][j].y);
+	// 		}
+	// 	}
 		
 	}
 

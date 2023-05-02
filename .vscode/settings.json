@@ -13,6 +13,8 @@
         "vector": "cpp",
         "ostream": "cpp",
         "array": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "deque": "cpp",
+        "string": "cpp"
     }
 }   
