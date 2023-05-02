@@ -310,7 +310,7 @@ int main(int argc ,char *argv[])
 								j_flag++;
 							}
 						}
-						if(j_flag>3/*&(gorw_direction[0]>10||gorw_direction[4]>10)*/)
+						if(j_flag>3&&(gorw_direction[0]>10||gorw_direction[4]>10))
 							edges.push_back(edge_t);
 						memset(gorw_direction,0,sizeof(gorw_direction));
 						printf("\n");
