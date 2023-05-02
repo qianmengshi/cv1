@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "xzzz",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include",
+                "/usr/local/include/**",
+                "/usr/include/c++",
+                "/home/xzzz/include/opencv/include"
+                
+
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "/usr/bin/cpp",
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}
