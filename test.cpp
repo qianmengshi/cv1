@@ -91,7 +91,7 @@ int find_rect(unsigned char image[120][188])
 							{
 								int x = c_pt.x,y = c_pt.y;
 								printf("(%d),",curr_d);
-								gorw_direction[curr_d]++;
+								gorw_direction[curr_d]++;    //累加生长方向
 								curr_d -= 2;   // 更新当前方向
 								point_num++;
 								edge_t[point_num].x = c_pt.x;
@@ -121,7 +121,7 @@ int find_rect(unsigned char image[120][188])
 								j_flag++;
 							}
 						}
-						if(j_flag>3&&(gorw_direction[0]>10||gorw_direction[4]>10))
+						if(j_flag>3&&(gorw_direction[0]>10||gorw_direction[4]>10))   //判断四个方向的生在达到一定次数且横方向生长一定次数
 						{
 							for(int i = 0;i <= point_num ;i++)
 							{
@@ -349,6 +349,7 @@ int main(int argc ,char *argv[])
 	#if 1       //八领域
 	int line_num;
 	line_num = find_rect(image_buffer);
+	printf("\n%d\n",line_num);
 	if(line_num>10)
 	{
 		line_num = 10;
